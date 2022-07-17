@@ -1,0 +1,54 @@
+version: '3.7'
+
+services:
+  nodejs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nodejs
+    tty: true
+    privileged: true
+    stdin_open: true
+    container_name: ${PROJECT_NAME}-nodejs
+    env_file: .env
+    environment:
+      - MONGO_USERNAME=$MONGO_USERNAME
+      - MONGO_PASSWORD=$MONGO_PASSWORD
+      - MONGO_HOSTNAME=db
+      - MONGO_PORT=$MONGO_PORT
+      - MONGO_DB=$MONGO_DB
+    ports:
+      - "80:3000"
+    volumes:
+      - ./code:/home/node/app
+    networks:
+      - app-network
+
+  database:
+    image: postgres
+    command: "postgres -c max_connections=200"
+    container_name: ${PROJECT_NAME}-database
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+      - ./sql/database.sql:/docker-entrypoint-initdb.d/database.sql
+    ports:
+      - $DB_PORT:5432
+    healthcheck:
+      test: "pg_isready -U postgres"
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    environment:
+      - "TZ=America/Sao_Paulo"
+      - "POSTGRES_HOST_AUTH_METHOD=trust"
+      - "POSTGRES_PASSWORD=1234"
+      - "POSTGRES_USER=postgres"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  dbdata:
