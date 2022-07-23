@@ -1,1 +1,1 @@
-CREATE DATABASE mangabit;
+CREATE DATABASE gestorgasto;
